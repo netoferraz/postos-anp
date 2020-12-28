@@ -1,19 +1,22 @@
 package params
 
-import "log"
+import (
+	"log"
+	"strings"
+)
 
 var ufs = make(map[string]string)
-var combustivel = make(map[string]string)
+var tipoPosto = make(map[string]string)
 
 func buildCombustivelParams() map[string]string {
-	combustivel["Revendedor"] = "1"
-	combustivel["Abastecimento"] = "2"
-	combustivel["Escola"] = "3"
-	combustivel["GNV"] = "4"
-	combustivel["Flutuante"] = "5"
-	combustivel["Aviação"] = "6"
-	combustivel["Marítimo"] = "7"
-	return combustivel
+	tipoPosto["Revendedor"] = "1"
+	tipoPosto["Abastecimento"] = "2"
+	tipoPosto["Escola"] = "3"
+	tipoPosto["GNV"] = "4"
+	tipoPosto["Flutuante"] = "5"
+	tipoPosto["Aviação"] = "6"
+	tipoPosto["Marítimo"] = "7"
+	return tipoPosto
 }
 
 func buildUfParams() map[string]string {
@@ -49,6 +52,7 @@ func buildUfParams() map[string]string {
 
 func Getufs(uf string) string {
 	ufs := buildUfParams()
+	uf = strings.ToUpper(uf)
 	getuf := ufs[uf]
 	if getuf == "" {
 		log.Fatal("Não existe na base a UF ", uf)
@@ -56,11 +60,11 @@ func Getufs(uf string) string {
 	return getuf
 }
 
-func GetTipoPosto(combustivel string) string {
+func GetTipoPosto(categoria string) string {
 	codPosto := buildCombustivelParams()
-	getCodigo := codPosto[combustivel]
+	getCodigo := codPosto[categoria]
 	if getCodigo == "" {
-		log.Fatal("Não existe na base o combustível ", combustivel)
+		log.Fatal("Os parâmetros aceitos são: Revendedor, Abastecimento, Escola, GNV, Flutuante, Aviação, Marítimo.")
 	}
 	return getCodigo
 }

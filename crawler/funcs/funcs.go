@@ -61,7 +61,7 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 			case "Nome Fantasia:":
 				container.NomeFantasia = valores[:len(propriedades)][i]
 			case "Endereço:":
-				container.Endereço = valores[:len(propriedades)][i]
+				container.Endereco = valores[:len(propriedades)][i]
 			case "Complemento:":
 				container.Complemento = valores[:len(propriedades)][i]
 			case "Bairro:":
@@ -73,7 +73,7 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 			case "Número Despacho:":
 				container.NumeroDespacho = valores[:len(propriedades)][i]
 			case "Data Publicação:":
-				container.DataPublicaçao = valores[:len(propriedades)][i]
+				container.DataPublicacao = valores[:len(propriedades)][i]
 			case "Bandeira/Início:":
 				container.Bandeira_Inicio = valores[:len(propriedades)][i]
 			case "Tipo do Posto:":
@@ -115,7 +115,7 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 			case "Nome Fantasia:":
 				container.NomeFantasia = valores[i]
 			case "Endereço:":
-				container.Endereço = valores[i]
+				container.Endereco = valores[i]
 			case "Complemento:":
 				container.Complemento = valores[i]
 			case "Bairro:":
@@ -127,7 +127,7 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 			case "Número Despacho:":
 				container.NumeroDespacho = valores[i]
 			case "Data Publicação:":
-				container.DataPublicaçao = valores[i]
+				container.DataPublicacao = valores[i]
 			case "Bandeira/Início:":
 				container.Bandeira_Inicio = valores[i]
 			case "Tipo do Posto:":

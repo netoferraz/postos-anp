@@ -22,13 +22,13 @@ type DetailsPosto struct {
 	CNPJ            string
 	RazaoSocial     string
 	NomeFantasia    string
-	Endereço        string
+	Endereco        string
 	Complemento     string
 	Bairro          string
 	Municipio_Uf    string
 	CEP             string
 	NumeroDespacho  string
-	DataPublicaçao  string
+	DataPublicacao  string
 	Bandeira_Inicio string
 	TipodoPosto     string
 	Socios          []string
