@@ -12,7 +12,7 @@ services:
             - '8000:8000'
         volumes:
             - './crawler:/opt/app:cached'
-        command: ["go", "run", "./main.go", "-UF", "SP", "-tipoPosto", "Revendedor"]
+        command: ["go", "run", "./main.go", "-UF", "AC", "-tipoPosto", "Revendedor"]
 
     # MongoDB
     mongo:

@@ -1,5 +1,7 @@
 package entities
 
+import "time"
+
 type Posto struct {
 	CNPJ          string
 	RazaoSocial   string
@@ -18,21 +20,23 @@ type EquipamentosPosto struct {
 }
 
 type DetailsPosto struct {
-	Autorizacao     string
-	CNPJ            string
-	RazaoSocial     string
-	NomeFantasia    string
-	Endereco        string
-	Complemento     string
-	Bairro          string
-	Municipio_Uf    string
-	CEP             string
-	NumeroDespacho  string
-	DataPublicacao  string
-	Bandeira_Inicio string
-	TipodoPosto     string
-	Socios          []string
-	Equipamentos    []EquipamentosPosto
+	Autorizacao       string
+	CNPJ              string
+	RazaoSocial       string
+	NomeFantasia      string
+	Endereco          string
+	Complemento       string
+	Bairro            string
+	MunicipioUf       string
+	CEP               string
+	NumeroDespacho    string
+	DataPublicacao    string
+	BandeiraInicio    string
+	TipodoPosto       string
+	StatusPosto       string
+	Socios            []string
+	Equipamentos      []EquipamentosPosto
+	DatetimeCollected time.Time
 }
 
 type Pessoajuridica interface {

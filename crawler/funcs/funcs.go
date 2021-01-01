@@ -3,6 +3,7 @@ package funcs
 import (
 	"entities"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 )
@@ -67,7 +68,7 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 			case "Bairro:":
 				container.Bairro = valores[:len(propriedades)][i]
 			case "Município/UF:":
-				container.Municipio_Uf = valores[:len(propriedades)][i]
+				container.MunicipioUf = valores[:len(propriedades)][i]
 			case "CEP:":
 				container.CEP = valores[:len(propriedades)][i]
 			case "Número Despacho:":
@@ -75,9 +76,11 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 			case "Data Publicação:":
 				container.DataPublicacao = valores[:len(propriedades)][i]
 			case "Bandeira/Início:":
-				container.Bandeira_Inicio = valores[:len(propriedades)][i]
+				container.BandeiraInicio = valores[:len(propriedades)][i]
 			case "Tipo do Posto:":
 				container.TipodoPosto = valores[:len(propriedades)][i]
+			case "StatusPosto":
+				container.StatusPosto = valores[:len(propriedades)][i]
 			case "Sócios:":
 				var uniqueSocios []string
 				cleanedSocios := strings.TrimSpace(valores[:len(propriedades)][i])
@@ -121,7 +124,7 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 			case "Bairro:":
 				container.Bairro = valores[i]
 			case "Município/UF:":
-				container.Municipio_Uf = valores[i]
+				container.MunicipioUf = valores[i]
 			case "CEP:":
 				container.CEP = valores[i]
 			case "Número Despacho:":
@@ -129,13 +132,17 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 			case "Data Publicação:":
 				container.DataPublicacao = valores[i]
 			case "Bandeira/Início:":
-				container.Bandeira_Inicio = valores[i]
+				container.BandeiraInicio = valores[i]
 			case "Tipo do Posto:":
 				container.TipodoPosto = valores[i]
+			case "StatusPosto":
+				container.StatusPosto = valores[i]
 			case "Socios":
 				container.Socios = append(container.Socios, valores[i])
 			}
 		}
 	}
+	//datetime := time.Now().Format("2006-01-02 15:04:05")
+	container.DatetimeCollected = time.Now()
 	return container
 }

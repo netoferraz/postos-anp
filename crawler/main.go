@@ -8,6 +8,7 @@ import (
 	"log"
 	"mongo"
 	"params"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -97,6 +98,39 @@ func main() {
 			PostoDetails.Post("https://postos.anp.gov.br/resultado.asp", map[string]string{"Cod_inst": CodInstalacao, "estado": params.Getufs(Uf), "municipio": "0"})
 		}
 	})
+	crawlPostos.OnHTML("form", func(elem *colly.HTMLElement) {
+		formName := elem.Attr("name")
+		re := regexp.MustCompile("[0-9]+")
+		if strings.EqualFold(formName, "FormNext") {
+			elem.ForEach("input", func(_ int, webelement *colly.HTMLElement) {
+				inputName := webelement.Attr("value")
+				if strings.Contains(inputName, "Próximo") {
+					rawValue := webelement.Attr("onclick")
+					findpag := re.FindAllString(rawValue, -1)
+					if len(findpag) != 0 {
+						pag := findpag[0]
+						err := crawlPostos.Post(
+							"https://postos.anp.gov.br/consulta.asp",
+							map[string]string{
+								"sCnpj":        "",
+								"sRazaoSocial": "",
+								"sEstado":      params.Getufs(Uf),
+								"sMunicipio":   "0",
+								"sBandeira":    "0",
+								"sProduto":     "0",
+								"sTipodePosto": params.GetTipoPosto(categoriaPosto),
+								"p":            pag,
+								"hPesquisar":   "PESQUISAR",
+							})
+						if err != nil {
+							fmt.Println("Deu algum erro no POST da página", pag)
+						}
+
+					}
+				}
+			})
+		}
+	})
 	PostoDetails.OnRequest(func(r *colly.Request) {
 		funcs.SetHeaders(r)
 	})
@@ -115,6 +149,13 @@ func main() {
 				switch widthTable {
 				case "634":
 					elem.ForEach("tr td", func(_ int, line *colly.HTMLElement) {
+						line.ForEach("font", func(_ int, fontline *colly.HTMLElement) {
+							statusPosto := fontline.Attr("size")
+							if statusPosto == "3" {
+								features = append(features, "StatusPosto")
+								values = append(values, fontline.Text)
+							}
+						})
 						identifyFeature := line.Attr("align")
 						switch identifyFeature {
 						case "right":
@@ -171,6 +212,13 @@ func main() {
 					switch widthTable {
 					case "634":
 						elem.ForEach("tr td", func(_ int, line *colly.HTMLElement) {
+							line.ForEach("font", func(_ int, fontline *colly.HTMLElement) {
+								statusPosto := fontline.Attr("size")
+								if statusPosto == "3" {
+									features = append(features, "StatusPosto")
+									values = append(values, fontline.Text)
+								}
+							})
 							identifyFeature := line.Attr("align")
 							switch identifyFeature {
 							case "right":
