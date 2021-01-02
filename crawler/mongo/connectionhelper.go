@@ -68,14 +68,12 @@ func CreateDocument(client *mongo.Client, posto entities.Pessoajuridica) error {
 	return nil
 }
 
-func ReplaceDocument(client *mongo.Client, feature string, value string, document entities.DetailsPosto) error {
+//ReplaceDocument upsert a document
+func ReplaceDocument(client *mongo.Client, collectionName string, feature string, value string, document interface{}) error {
 	db := os.Getenv("MONGO_DATABASE")
+	//var collectionName string
 	if db == "" {
 		log.Fatal("É necessário configurar a variável de ambiente MONGO_DATABASE")
-	}
-	collectionName := os.Getenv("MONGO_COLLECTION")
-	if collectionName == "" {
-		log.Fatal("É necessário configurar a variável de ambiente MONGO_COLLECTION.")
 	}
 	optionsUpdate := options.Update().SetUpsert(true)
 	//Create a handle to the respective collection in the database.

@@ -9,7 +9,8 @@ WORKDIR /opt/app
 
 # environment variables
 ENV MONGO_DATABASE=anp \
-    MONGO_COLLECTION=postos
+    MONGO_COLLECTION=postos\
+    MONGO_COLLECTION_ERROR=postos_error
 
 
 # Copy the source from the current directory to the working Directory inside the container 

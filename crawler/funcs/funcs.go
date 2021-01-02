@@ -1,6 +1,8 @@
 package funcs
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"entities"
 	"strings"
 	"time"
@@ -20,7 +22,8 @@ func unique(stringSlice []string) []string {
 	return list
 }
 
-func contains(slice []string, item string) bool {
+//Contains to check if a slice of strings contains a certain string
+func Contains(slice []string, item string) bool {
 	set := make(map[string]struct{}, len(slice))
 	for _, s := range slice {
 		set[s] = struct{}{}
@@ -30,6 +33,7 @@ func contains(slice []string, item string) bool {
 	return ok
 }
 
+//SetHeaders to set Headers of a request
 func SetHeaders(request *colly.Request) *colly.Request {
 	request.Headers.Set("Connection", "keep-alive")
 	request.Headers.Set("Cache-Control", "max-age=0")
@@ -47,6 +51,7 @@ func SetHeaders(request *colly.Request) *colly.Request {
 	return request
 }
 
+//CollectDetails to collect Posto Details
 func CollectDetails(propriedades []string, valores []string) entities.DetailsPosto {
 
 	var container entities.DetailsPosto
@@ -87,7 +92,7 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 				socios := strings.Split(cleanedSocios, "            ")
 				uniqueSocios = unique(socios)
 				for _, socio := range uniqueSocios {
-					isExists := contains(container.Socios, socio)
+					isExists := Contains(container.Socios, socio)
 					if !isExists {
 						container.Socios = append(container.Socios, socio)
 					}
@@ -100,7 +105,7 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 			socios := strings.Split(cleanedSocios, "            ")
 			uniqueSocios = unique(socios)
 			for _, socio := range uniqueSocios {
-				isExists := contains(container.Socios, socio)
+				isExists := Contains(container.Socios, socio)
 				if !isExists {
 					container.Socios = append(container.Socios, socio)
 				}
@@ -145,4 +150,10 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 	//datetime := time.Now().Format("2006-01-02 15:04:05")
 	container.DatetimeCollected = time.Now()
 	return container
+}
+
+//GetMD5Hash generate a md5 hash code
+func GetMD5Hash(text string) string {
+	hash := md5.Sum([]byte(text))
+	return hex.EncodeToString(hash[:])
 }

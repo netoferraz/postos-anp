@@ -7,6 +7,7 @@ import (
 	"funcs"
 	"log"
 	"mongo"
+	"os"
 	"params"
 	"regexp"
 	"strconv"
@@ -24,6 +25,15 @@ func main() {
 	}
 	var Uf string
 	var categoriaPosto string
+	var containerCnpj []string
+	var collectionNameSucess string = os.Getenv("MONGO_COLLECTION")
+	if collectionNameSucess == "" {
+		log.Fatal("É necessário configurar a variável de ambiente MONGO_COLLECTION.")
+	}
+	var collectionNameFail string = os.Getenv("MONGO_COLLECTION_ERROR")
+	if collectionNameFail == "" {
+		log.Fatal("É necessário configurar a variável de ambiente MONGO_COLLECTION_ERROR.")
+	}
 	flag.StringVar(&Uf, "UF", "", "Sigla da Unidade da Federação a ser coletada")
 	flag.StringVar(&categoriaPosto, "tipoPosto", "", "Tipo do posto.")
 	flag.Parse()
@@ -41,6 +51,7 @@ func main() {
 		colly.UserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.80 Safari/537.36"),
 		colly.DetectCharset(),
 	)
+	PostoDetails.SetRequestTimeout(20 * time.Second)
 	PostoDetails.Limit(&colly.LimitRule{
 		Parallelism: 2,
 		Delay:       5 * time.Second,
@@ -75,6 +86,7 @@ func main() {
 	})
 	crawlPostos.OnError(func(r *colly.Response, err error) {
 		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+		r.Request.Retry()
 	})
 	crawlPostos.OnHTML("table tr", func(e *colly.HTMLElement) {
 		var CodInstalacao string
@@ -90,7 +102,6 @@ func main() {
 							}
 						}
 					}
-
 				})
 			}
 		})
@@ -136,6 +147,21 @@ func main() {
 	})
 	PostoDetails.OnError(func(r *colly.Response, err error) {
 		fmt.Println("Request URL:", r.Request.URL, " body:", r.Request.Body, " failed with response:", r.StatusCode, "\nError:", err)
+		bodyString := fmt.Sprintf("%v", r.Request.Body)
+		var payLoadError = make(map[string]string)
+		reParams := regexp.MustCompile(`\w+=\w+`)
+		getParams := reParams.FindAllString(bodyString, -1)
+		for _, params := range getParams {
+			splitParams := strings.Split(params, "=")
+			payLoadError[splitParams[0]] = splitParams[1]
+		}
+		errString := fmt.Sprintf("%v", err)
+		payLoadError["message"] = string(errString)
+		stringParams := fmt.Sprintf("{\"Cod_inst\": \"%v\", \"estado\": \"%v\", \"municipio\": \"%v\"}", payLoadError["Cod_inst"], payLoadError["estado"], payLoadError["municipio"])
+		generateHash := funcs.GetMD5Hash(stringParams)
+		payLoadError["hash_id"] = generateHash
+		mongo.ReplaceDocument(client, collectionNameFail, "hash_id", payLoadError["hash_id"], payLoadError)
+		r.Request.Retry()
 	})
 	PostoDetails.OnHTML("table", func(el *colly.HTMLElement) {
 		var ContainerEquipamentos []entities.EquipamentosPosto
@@ -242,7 +268,12 @@ func main() {
 		if len(features) != 0 && len(values) != 0 {
 			container := funcs.CollectDetails(features, values)
 			container.Equipamentos = ContainerEquipamentos
-			mongo.ReplaceDocument(client, "cnpj", container.CNPJ, container)
+			isCnpj := funcs.Contains(containerCnpj, container.CNPJ)
+			if !isCnpj {
+				containerCnpj = append(containerCnpj, container.CNPJ)
+				fmt.Println("Coletando os dados do CNPJ", container.CNPJ)
+				mongo.ReplaceDocument(client, collectionNameSucess, "cnpj", container.CNPJ, container)
+			}
 		}
 
 	})
