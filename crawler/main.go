@@ -23,8 +23,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var Uf string
-	var categoriaPosto string
+	var SelectedUf string
+	var SelectedCategoriaPosto string
 	var containerCnpj []string
 	var collectionNameSucess string = os.Getenv("MONGO_COLLECTION")
 	if collectionNameSucess == "" {
@@ -34,8 +34,8 @@ func main() {
 	if collectionNameFail == "" {
 		log.Fatal("É necessário configurar a variável de ambiente MONGO_COLLECTION_ERROR.")
 	}
-	flag.StringVar(&Uf, "UF", "", "Sigla da Unidade da Federação a ser coletada")
-	flag.StringVar(&categoriaPosto, "tipoPosto", "", "Tipo do posto.")
+	flag.StringVar(&SelectedUf, "UF", "", "Sigla da Unidade da Federação a ser coletada")
+	flag.StringVar(&SelectedCategoriaPosto, "tipoPosto", "", "Tipo do posto.")
 	flag.Parse()
 	initialRequest := colly.NewCollector(
 		colly.UserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.80 Safari/537.36"),
@@ -58,22 +58,100 @@ func main() {
 	})
 	initialRequest.OnResponse(func(r *colly.Response) {
 		if r.StatusCode == 200 {
-			err := crawlPostos.Post(
-				"https://postos.anp.gov.br/consulta.asp",
-				map[string]string{
-					"sCnpj":        "",
-					"sRazaoSocial": "",
-					"sEstado":      params.Getufs(Uf),
-					"sMunicipio":   "0",
-					"sBandeira":    "0",
-					"sProduto":     "0",
-					"sTipodePosto": params.GetTipoPosto(categoriaPosto),
-					"p":            "",
-					"hPesquisar":   "PESQUISAR",
-				})
-			if err != nil {
-				fmt.Println("Deu algum erro no POST.")
+			Uf, ok := params.Getufs(SelectedUf)
+			if !ok {
+				log.Fatal("É necessário atribuir um valor para o parâmetro -UF.")
 			}
+			categoriaPosto, ok := params.GetTipoPosto(SelectedCategoriaPosto)
+			if !ok {
+				log.Fatal("É necessário atribuir um valor para o parâmetro -tipoPosto.")
+			}
+			if !strings.EqualFold(Uf, "All") && !strings.EqualFold(categoriaPosto, "All") {
+				err := crawlPostos.Post(
+					"https://postos.anp.gov.br/consulta.asp",
+					map[string]string{
+						"sCnpj":        "",
+						"sRazaoSocial": "",
+						"sEstado":      Uf,
+						"sMunicipio":   "0",
+						"sBandeira":    "0",
+						"sProduto":     "0",
+						"sTipodePosto": categoriaPosto,
+						"p":            "",
+						"hPesquisar":   "PESQUISAR",
+					})
+				if err != nil {
+					log.Println(err)
+				}
+
+			} else if strings.EqualFold(Uf, "All") && !strings.EqualFold(categoriaPosto, "All") {
+				ufs := params.BuildAllUfs()
+				for _, uf := range ufs {
+					err := crawlPostos.Post(
+						"https://postos.anp.gov.br/consulta.asp",
+						map[string]string{
+							"sCnpj":        "",
+							"sRazaoSocial": "",
+							"sEstado":      uf,
+							"sMunicipio":   "0",
+							"sBandeira":    "0",
+							"sProduto":     "0",
+							"sTipodePosto": categoriaPosto,
+							"p":            "",
+							"hPesquisar":   "PESQUISAR",
+						})
+					if err != nil {
+						log.Println(err)
+					}
+				}
+			} else if !strings.EqualFold(Uf, "All") && strings.EqualFold(categoriaPosto, "All") {
+				allCatPosto := params.BuildAllTipoPosto()
+				for _, catPosto := range allCatPosto {
+					err := crawlPostos.Post(
+						"https://postos.anp.gov.br/consulta.asp",
+						map[string]string{
+							"sCnpj":        "",
+							"sRazaoSocial": "",
+							"sEstado":      Uf,
+							"sMunicipio":   "0",
+							"sBandeira":    "0",
+							"sProduto":     "0",
+							"sTipodePosto": catPosto,
+							"p":            "",
+							"hPesquisar":   "PESQUISAR",
+						})
+					if err != nil {
+						log.Println(err)
+					}
+
+				}
+
+			} else {
+				ufs := params.BuildAllUfs()
+				allCatPosto := params.BuildAllTipoPosto()
+				for _, uf := range ufs {
+					for _, catPosto := range allCatPosto {
+						fmt.Println("Iniciando consulta para [UF]:", uf, "& [tipoPosto]", catPosto)
+						err := crawlPostos.Post(
+							"https://postos.anp.gov.br/consulta.asp",
+							map[string]string{
+								"sCnpj":        "",
+								"sRazaoSocial": "",
+								"sEstado":      uf,
+								"sMunicipio":   "0",
+								"sBandeira":    "0",
+								"sProduto":     "0",
+								"sTipodePosto": catPosto,
+								"p":            "",
+								"hPesquisar":   "PESQUISAR",
+							})
+						if err != nil {
+							fmt.Println("Deu algum erro no POST.")
+						}
+					}
+				}
+			}
+
 		}
 	})
 	crawlPostos.OnResponse(func(r *colly.Response) {
@@ -106,7 +184,9 @@ func main() {
 			}
 		})
 		if CodInstalacao != "" {
-			PostoDetails.Post("https://postos.anp.gov.br/resultado.asp", map[string]string{"Cod_inst": CodInstalacao, "estado": params.Getufs(Uf), "municipio": "0"})
+			bodyString := fmt.Sprintf("%v", e.Request.Body)
+			uf := params.GetParamsValue(bodyString, "UF")
+			PostoDetails.Post("https://postos.anp.gov.br/resultado.asp", map[string]string{"Cod_inst": CodInstalacao, "estado": uf, "municipio": "0"})
 		}
 	})
 	crawlPostos.OnHTML("form", func(elem *colly.HTMLElement) {
@@ -119,17 +199,20 @@ func main() {
 					rawValue := webelement.Attr("onclick")
 					findpag := re.FindAllString(rawValue, -1)
 					if len(findpag) != 0 {
+						bodyString := fmt.Sprintf("%v", elem.Request.Body)
+						uf := params.GetParamsValue(bodyString, "UF")
+						tipoPosto := params.GetParamsValue(bodyString, "tipoPosto")
 						pag := findpag[0]
 						err := crawlPostos.Post(
 							"https://postos.anp.gov.br/consulta.asp",
 							map[string]string{
 								"sCnpj":        "",
 								"sRazaoSocial": "",
-								"sEstado":      params.Getufs(Uf),
+								"sEstado":      uf,
 								"sMunicipio":   "0",
 								"sBandeira":    "0",
 								"sProduto":     "0",
-								"sTipodePosto": params.GetTipoPosto(categoriaPosto),
+								"sTipodePosto": tipoPosto,
 								"p":            pag,
 								"hPesquisar":   "PESQUISAR",
 							})

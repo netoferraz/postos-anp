@@ -100,14 +100,16 @@ func CollectDetails(propriedades []string, valores []string) entities.DetailsPos
 			}
 		}
 		var uniqueSocios []string
-		for _, value := range valores[len(propriedades):] {
-			cleanedSocios := strings.TrimSpace(value)
-			socios := strings.Split(cleanedSocios, "            ")
-			uniqueSocios = unique(socios)
-			for _, socio := range uniqueSocios {
-				isExists := Contains(container.Socios, socio)
-				if !isExists {
-					container.Socios = append(container.Socios, socio)
+		if len(propriedades) <= len(valores) {
+			for _, value := range valores[len(propriedades):] {
+				cleanedSocios := strings.TrimSpace(value)
+				socios := strings.Split(cleanedSocios, "            ")
+				uniqueSocios = unique(socios)
+				for _, socio := range uniqueSocios {
+					isExists := Contains(container.Socios, socio)
+					if !isExists {
+						container.Socios = append(container.Socios, socio)
+					}
 				}
 			}
 		}
